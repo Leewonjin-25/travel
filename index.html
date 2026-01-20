@@ -2,31 +2,33 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>역사건축지도 - 답사 코스 메이커</title>
+    <title>배리어프리 문화관광 지도</title>
     <link rel="stylesheet" href="style.css">
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_API_KEY&libraries=services"></script>
+    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_APP_KEY&libraries=services"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>🏛️ 역사건축 답사 코스 가이드</h1>
-        <div class="search-section">
-            <input type="text" id="cityInput" placeholder="시/군/구 입력 (예: 경주시)">
-            <button onclick="searchHeritage()">유산 조회</button>
+        <h1>♿ 배리어프리 문화예술관광 탐방</h1>
+        
+        <div class="filter-group">
+            <select id="sidoSelect" onchange="updateGugun()"><option value="">시/도 선택</option></select>
+            <select id="gugunSelect"><option value="">시/군/구 선택</option></select>
+            <select id="cat1Select"><option value="">대분류(카테고리1)</option></select>
+            <select id="cat2Select"><option value="">중분류(카테고리2)</option></select>
+            <button onclick="searchPlaces()" class="search-btn">조회하기</button>
         </div>
 
-        <div id="course-buttons" style="display:none;">
-            <p>20km 이내 추천 코스 선택:</p>
-            <button onclick="makeCourse('distance')">대안 1: 가까운 거리</button>
-            <button onclick="makeCourse('era')">대안 2: 시대순 여행</button>
-            <button onclick="makeCourse('random')">대안 3: 랜덤 탐방</button>
+        <div id="course-ui" style="display:none; text-align:center; margin-bottom:10px;">
+            <strong>20km 이내 코스 추천: </strong>
+            <button onclick="makeCourse('random')" class="course-btn">추천 코스 A</button>
+            <button onclick="makeCourse('random')" class="course-btn">추천 코스 B</button>
+            <button onclick="makeCourse('random')" class="course-btn">추천 코스 C</button>
         </div>
 
         <div id="map"></div>
-        <div id="info-panel">
-            <h3>방문 코스 상세 정보</h3>
-            <ul id="course-list"></ul>
+        <div id="info-list">
+            <p class="guide">지역과 카테고리를 선택한 후 조회하기를 눌러주세요.</p>
         </div>
     </div>
     <script src="script.js"></script>
