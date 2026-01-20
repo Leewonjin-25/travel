@@ -40,11 +40,13 @@ function searchPlaces() {
     const c1 = document.getElementById('cat1Select').value;
     const c2 = document.getElementById('cat2Select').value;
 
-    filteredData = allData.filter(d => 
-        (!sido || d['시도 명칭'] === sido) &&
-        (!gugun || d['시군구 명칭'] === gugun) &&
-        (!c1 || d['카테고리1'] === c1) &&
-        (!c2 || d['카테고리2'] === c2)
+    filteredList = rawData.filter(r =>
+  (!sido || r["광역시도"] === sido) &&
+  (!gugun || r["시군구명"] === gugun) &&
+  (!cat1 || r["대분류"] === cat1) &&
+  (!cat2 || r["중분류"] === cat2)
+);
+
     );
 
     if(filteredData.length > 0) {
