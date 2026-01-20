@@ -1,86 +1,95 @@
 let allData = [];
-let filteredData = [];
 let map, markers = [], polyline;
 
-// 1. 데이터 로드 (파일명을 정확히 확인하세요)
+// 1. 데이터 로드
 Papa.parse("한국문화정보원_전국 배리어프리 문화예술관광지_20221125.csv", {
     download: true,
     header: true,
-    skipEmptyLines: true, // 빈 줄 무시
+    skipEmptyLines: true,
     complete: function(results) {
         allData = results.data;
-        console.log("로드된 데이터 개수:", allData.length);
-        console.log("첫 번째 데이터 샘플:", allData[0]); // 열 이름 확인용
-        
-        if(allData.length > 0) {
-            initFilters();
-        } else {
-            console.error("데이터를 불러오지 못했습니다. 파일명을 확인하세요.");
-        }
+        console.log("데이터 로드 완료:", allData.length);
+        initAllFilters(); // 모든 필터 초기화 실행
     }
 });
 
-function initFilters() {
-    // CSV의 정확한 열 이름 '시도 명칭'을 사용합니다.
+// 2. 초기 필터 세팅 (시도 & 카테고리1)
+function initAllFilters() {
+    // 시도 명칭 세팅
     const sidos = [...new Set(allData.map(d => d['시도 명칭']))].filter(x => x).sort();
     const sidoSelect = document.getElementById('sidoSelect');
-    
     sidos.forEach(s => {
         const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
+        opt.value = s; opt.textContent = s;
         sidoSelect.appendChild(opt);
     });
 
-    // 카테고리1 초기화
+    // 카테고리1 세팅
     const cat1s = [...new Set(allData.map(d => d['카테고리1']))].filter(x => x).sort();
-    fillSelect('cat1Select', cat1s);
-}
-
-function fillSelect(id, list) {
-    const sel = document.getElementById(id);
-    list.forEach(item => {
+    const cat1Select = document.getElementById('cat1Select');
+    cat1s.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = item;
-        opt.textContent = item;
-        sel.appendChild(opt);
+        opt.value = c; opt.textContent = c;
+        cat1Select.appendChild(opt);
     });
 }
 
+// 3. 시도 선택 시 -> 시군구와 중분류(카테고리2)를 동시에 업데이트
 function updateGugun() {
     const selectedSido = document.getElementById('sidoSelect').value;
+    
+    // 시군구 필터 업데이트
     const gugunSelect = document.getElementById('gugunSelect');
     gugunSelect.innerHTML = '<option value="">시/군/구 선택</option>';
     
-    // 선택한 시도에 해당하는 시군구만 추출
     const guguns = [...new Set(allData
         .filter(d => d['시도 명칭'] === selectedSido)
-        .map(d => d['시군구 명칭']))]
-        .filter(x => x).sort();
+        .map(d => d['시군구 명칭']))].filter(x => x).sort();
 
     guguns.forEach(g => {
         const opt = document.createElement('option');
-        opt.value = g;
-        opt.textContent = g;
+        opt.value = g; opt.textContent = g;
         gugunSelect.appendChild(opt);
     });
 
-    // 카테고리 2도 시도 선택에 맞춰 업데이트하고 싶다면 여기서 추가 로직 작성
+    // 중분류(카테고리2) 필터 업데이트 (선택한 시도 내에 존재하는 중분류만 노출)
+    const cat2Select = document.getElementById('cat2Select');
+    cat2Select.innerHTML = '<option value="">중분류(카테고리2)</option>';
+    
     const cat2s = [...new Set(allData
         .filter(d => d['시도 명칭'] === selectedSido)
-        .map(d => d['카테고리2']))]
-        .filter(x => x).sort();
-    const c2Sel = document.getElementById('cat2Select');
-    c2Sel.innerHTML = '<option value="">중분류 선택</option>';
+        .map(d => d['카테고리2']))].filter(x => x).sort();
+
     cat2s.forEach(c => {
         const opt = document.createElement('option');
-        opt.value = c;
-        opt.textContent = c;
-        c2Sel.appendChild(opt);
+        opt.value = c; opt.textContent = c;
+        cat2Select.appendChild(opt);
     });
 }
 
-// 거리 계산 및 코스 생성 함수는 이전과 동일하게 유지...
+// 4. 장소 검색 함수
+function searchPlaces() {
+    const sido = document.getElementById('sidoSelect').value;
+    const gugun = document.getElementById('gugunSelect').value;
+    const cat1 = document.getElementById('cat1Select').value;
+    const cat2 = document.getElementById('cat2Select').value;
+
+    const filtered = allData.filter(d => 
+        (!sido || d['시도 명칭'] === sido) &&
+        (!gugun || d['시군구 명칭'] === gugun) &&
+        (!cat1 || d['카테고리1'] === cat1) &&
+        (!cat2 || d['카테고리2'] === cat2)
+    );
+
+    if (filtered.length > 0) {
+        document.getElementById('course-ui').style.display = 'block';
+        // 지도 중심 이동 및 리스트 출력 로직 (기존과 동일)
+        displayResults(filtered);
+    } else {
+        alert("조건에 맞는 관광지가 없습니다.");
+    }
+}
+
 
 /* 거리 계산 */
 function getDistance(lat1, lon1, lat2, lon2) {
