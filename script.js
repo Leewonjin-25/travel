@@ -153,8 +153,6 @@ function makeCourse(idx) {
   });
 }
 
-
-function clearMap() { if(polyline) polyline.setMap(null); markers.forEach(m => m.setMap(null)); }
 const sidoList = [
   "서울특별시","부산광역시","대구광역시","인천광역시","광주광역시",
   "대전광역시","울산광역시","세종특별자치시",
@@ -198,3 +196,26 @@ const gugunData = {
   "제주특별자치도": ["제주시","서귀포시"]
 };
 
+// 시/도 채우기
+const sidoSelect = document.getElementById("sidoSelect");
+sidoList.forEach(sido => {
+  const opt = document.createElement("option");
+  opt.value = sido;
+  opt.textContent = sido;
+  sidoSelect.appendChild(opt);
+});
+
+// 시/군/구 갱신
+function updateGugun() {
+  const sido = document.getElementById("sidoSelect").value;
+  const gugunSelect = document.getElementById("gugunSelect");
+  gugunSelect.innerHTML = `<option value="">시/군/구 선택</option>`;
+  if (!gugunData[sido]) return;
+
+  gugunData[sido].forEach(gugun => {
+    const opt = document.createElement("option");
+    opt.value = gugun;
+    opt.textContent = gugun;
+    gugunSelect.appendChild(opt);
+  });
+}
