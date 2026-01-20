@@ -2,35 +2,37 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>배리어프리 문화관광 지도</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>배리어프리 수학여행 코스 플래너</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
     <link rel="stylesheet" href="style.css">
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=YOUR_KAKAO_APP_KEY&libraries=services"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>♿ 배리어프리 문화예술관광 탐방</h1>
-        
-        <div class="filter-group">
-            <select id="sidoSelect" onchange="updateGugun()"><option value="">시/도 선택</option></select>
-            <select id="gugunSelect"><option value="">시/군/구 선택</option></select>
-            <select id="cat1Select"><option value="">대분류(카테고리1)</option></select>
-            <select id="cat2Select"><option value="">중분류(카테고리2)</option></select>
-            <button onclick="searchPlaces()" class="search-btn">조회하기</button>
-        </div>
 
-        <div id="course-ui" style="display:none; text-align:center; margin-bottom:10px;">
-            <strong>20km 이내 코스 추천: </strong>
-            <button onclick="makeCourse('random')" class="course-btn">추천 코스 A</button>
-            <button onclick="makeCourse('random')" class="course-btn">추천 코스 B</button>
-            <button onclick="makeCourse('random')" class="course-btn">추천 코스 C</button>
-        </div>
+<div class="container mt-4">
+    <header class="text-center mb-5">
+        <h2 class="fw-bold">🚌 수학여행 코스 플래너</h2>
+        <p class="text-muted">모든 친구가 함께할 수 있는 배리어프리 여행지를 찾아보세요.</p>
+    </header>
 
-        <div id="map"></div>
-        <div id="info-list">
-            <p class="guide">지역과 카테고리를 선택한 후 조회하기를 눌러주세요.</p>
-        </div>
-    </div>
-    <script src="script.js"></script>
-</body>
-</html>
+    <section class="filter-section">
+        <div class="row g-3">
+            <div class="col-12 mb-2">
+                <label class="form-label fw-bold small text-primary">1. 데이터 업로드 (CSV)</label>
+                <input type="file" id="csvFile" class="form-control" accept=".csv">
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small text-secondary">지역 선택</label>
+                <select id="sido" class="form-select" onchange="filterData()">
+                    <option value="">시도 전체</option>
+                </select>
+            </div>
+            <div class="col-6 col-md-3">
+                <label class="form-label small text-secondary">테마 선택</label>
+                <select id="cat1" class="form-select" onchange="filterData()">
+                    <option value="">카테고리 전체</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-6">
+                <label class="form-label small
