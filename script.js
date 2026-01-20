@@ -191,3 +191,94 @@ function updateGugun() {
     gugunSelect.appendChild(opt);
   });
 }
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
+let filteredList = [];
+let courseList = [];
+
+function searchPlaces() {
+  const sido = sidoSelect.value;
+  const gugun = gugunSelect.value;
+  const cat1 = cat1Select.value;
+  const cat2 = cat2Select.value;
+
+  filteredList = rawData.filter(r =>
+    (!sido || r["시도"] === sido) &&
+    (!gugun || r["시군구"] === gugun) &&
+    (!cat1 || r["대분류"] === cat1) &&
+    (!cat2 || r["중분류"] === cat2)
+  );
+
+  // 선택 조건에 맞는 게 위로 오도록
+  showList(filteredList);
+
+  // 기준 위치: 첫 번째 장소
+  if (filteredList.length > 0) {
+    makeCourseBase(filteredList[0]);
+  }
+}
+function showList(list) {
+  const box = document.getElementById("info-list");
+  box.innerHTML = "";
+
+  list.forEach((p, i) => {
+    box.innerHTML += `
+      <div class="item">
+        <strong>${i+1}. ${p["시설명"]}</strong><br>
+        ${p["주소"]}
+      </div>
+    `;
+  });
+}
+function makeCourseBase(base) {
+  const baseLat = parseFloat(base["위도"]);
+  const baseLng = parseFloat(base["경도"]);
+
+  const near = filteredList.filter(p => {
+    const d = getDistance(
+      baseLat, baseLng,
+      parseFloat(p["위도"]), parseFloat(p["경도"])
+    );
+    p._dist = d;
+    return d <= 20;
+  });
+
+  // 거리순 정렬
+  near.sort((a,b) => a._dist - b._dist);
+
+  // 3개 코스 만들기
+  courseList = [
+    near.slice(0, 3),
+    near.slice(3, 6),
+    near.slice(6, 9)
+  ];
+
+  document.getElementById("course-ui").style.display = "block";
+}
+function makeCourse(idx) {
+  const list = courseList[idx];
+  const box = document.getElementById("course-result");
+  box.innerHTML = `<h3>추천 코스 ${String.fromCharCode(65+idx)}</h3>`;
+
+  if (!list || list.length === 0) {
+    box.innerHTML += "해당 코스가 없습니다.";
+    return;
+  }
+
+  list.forEach((p,i) => {
+    box.innerHTML += `
+      <div>
+        ${i+1}. ${p["시설명"]} (${p._dist.toFixed(1)}km)<br>
+        ${p["주소"]}
+      </div>
+    `;
+  });
+}
