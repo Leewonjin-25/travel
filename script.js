@@ -1,18 +1,86 @@
-let rawData = [];
-let filteredList = [];
-let courseList = [];
+let allData = [];
+let filteredData = [];
+let map, markers = [], polyline;
 
-/* CSV 불러오기 */
+// 1. 데이터 로드 (파일명을 정확히 확인하세요)
 Papa.parse("한국문화정보원_전국 배리어프리 문화예술관광지_20221125.csv", {
-  download: true,
-  header: true,
-  complete: function (results) {
-    rawData = results.data;
-    console.log("샘플:", rawData[0]);
-    makeSido();
-    makeCat1();
-  }
+    download: true,
+    header: true,
+    skipEmptyLines: true, // 빈 줄 무시
+    complete: function(results) {
+        allData = results.data;
+        console.log("로드된 데이터 개수:", allData.length);
+        console.log("첫 번째 데이터 샘플:", allData[0]); // 열 이름 확인용
+        
+        if(allData.length > 0) {
+            initFilters();
+        } else {
+            console.error("데이터를 불러오지 못했습니다. 파일명을 확인하세요.");
+        }
+    }
 });
+
+function initFilters() {
+    // CSV의 정확한 열 이름 '시도 명칭'을 사용합니다.
+    const sidos = [...new Set(allData.map(d => d['시도 명칭']))].filter(x => x).sort();
+    const sidoSelect = document.getElementById('sidoSelect');
+    
+    sidos.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        sidoSelect.appendChild(opt);
+    });
+
+    // 카테고리1 초기화
+    const cat1s = [...new Set(allData.map(d => d['카테고리1']))].filter(x => x).sort();
+    fillSelect('cat1Select', cat1s);
+}
+
+function fillSelect(id, list) {
+    const sel = document.getElementById(id);
+    list.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item;
+        opt.textContent = item;
+        sel.appendChild(opt);
+    });
+}
+
+function updateGugun() {
+    const selectedSido = document.getElementById('sidoSelect').value;
+    const gugunSelect = document.getElementById('gugunSelect');
+    gugunSelect.innerHTML = '<option value="">시/군/구 선택</option>';
+    
+    // 선택한 시도에 해당하는 시군구만 추출
+    const guguns = [...new Set(allData
+        .filter(d => d['시도 명칭'] === selectedSido)
+        .map(d => d['시군구 명칭']))]
+        .filter(x => x).sort();
+
+    guguns.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g;
+        opt.textContent = g;
+        gugunSelect.appendChild(opt);
+    });
+
+    // 카테고리 2도 시도 선택에 맞춰 업데이트하고 싶다면 여기서 추가 로직 작성
+    const cat2s = [...new Set(allData
+        .filter(d => d['시도 명칭'] === selectedSido)
+        .map(d => d['카테고리2']))]
+        .filter(x => x).sort();
+    const c2Sel = document.getElementById('cat2Select');
+    c2Sel.innerHTML = '<option value="">중분류 선택</option>';
+    cat2s.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c;
+        opt.textContent = c;
+        c2Sel.appendChild(opt);
+    });
+}
+
+// 거리 계산 및 코스 생성 함수는 이전과 동일하게 유지...
 
 /* 거리 계산 */
 function getDistance(lat1, lon1, lat2, lon2) {
