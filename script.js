@@ -1,130 +1,158 @@
-let allData = [];
-let filteredData = [];
-let map, markers = [], polyline;
+let rawData = [];
+let filteredList = [];
+let courseList = [];
 
-// 1. 데이터 로드 및 초기 셀렉트 박스 세팅
+/* CSV 불러오기 */
 Papa.parse("한국문화정보원_전국 배리어프리 문화예술관광지_20221125.csv", {
-    download: true, header: true,
-    complete: function(results) {
-        allData = results.data.filter(d => d.위도 && d.경도);
-        initFilters();
-    }
+  download: true,
+  header: true,
+  complete: function (results) {
+    rawData = results.data;
+    console.log("샘플:", rawData[0]);
+    makeSido();
+    makeCat1();
+  }
 });
 
-function initFilters() {
-    const sidos = [...new Set(allData.map(d => d['시도 명칭']))].sort();
-    fillSelect('sidoSelect', sidos);
-    const cat1 = [...new Set(allData.map(d => d['카테고리1']))].sort();
-    fillSelect('cat1Select', cat1);
-    const cat2 = [...new Set(allData.map(d => d['카테고리2']))].sort();
-    fillSelect('cat2Select', cat2);
+/* 거리 계산 */
+function getDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
 }
 
-function fillSelect(id, list) {
-    const sel = document.getElementById(id);
-    list.forEach(item => { if(item) sel.innerHTML += `<option value="${item}">${item}</option>`; });
+/* 시도 채우기 */
+function makeSido() {
+  const sel = document.getElementById("sidoSelect");
+  const set = new Set();
+  rawData.forEach(r => r["광역시도"] && set.add(r["광역시도"]));
+  set.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
 }
 
+/* 구군 채우기 */
 function updateGugun() {
-    const sido = document.getElementById('sidoSelect').value;
-    const guguns = [...new Set(allData.filter(d => d['시도 명칭'] === sido).map(d => d['시군구 명칭']))].sort();
-    const sel = document.getElementById('gugunSelect');
-    sel.innerHTML = '<option value="">시/군/구 선택</option>';
-    guguns.forEach(g => { if(g) sel.innerHTML += `<option value="${g}">${g}</option>`; });
+  const sido = sidoSelect.value;
+  const sel = gugunSelect;
+  sel.innerHTML = `<option value="">시/군/구 선택</option>`;
+  const set = new Set();
+  rawData.forEach(r => {
+    if (r["광역시도"] === sido && r["시군구명"]) set.add(r["시군구명"]);
+  });
+  set.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
 }
 
-// 2. 검색 기능
+/* 대분류 */
+function makeCat1() {
+  const sel = cat1Select;
+  const set = new Set();
+  rawData.forEach(r => r["대분류"] && set.add(r["대분류"]));
+  set.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    sel.appendChild(o);
+  });
+}
+
+/* 중분류 */
+cat1Select.addEventListener("change", () => {
+  const v = cat1Select.value;
+  cat2Select.innerHTML = `<option value="">중분류(카테고리2)</option>`;
+  const set = new Set();
+  rawData.forEach(r => {
+    if (r["대분류"] === v && r["중분류"]) set.add(r["중분류"]);
+  });
+  set.forEach(x => {
+    const o = document.createElement("option");
+    o.value = x; o.textContent = x;
+    cat2Select.appendChild(o);
+  });
+});
+
+/* 조회 */
 function searchPlaces() {
-    const sido = document.getElementById('sidoSelect').value;
-    const gugun = document.getElementById('gugunSelect').value;
-    const c1 = document.getElementById('cat1Select').value;
-    const c2 = document.getElementById('cat2Select').value;
+  const s = sidoSelect.value;
+  const g = gugunSelect.value;
+  const c1 = cat1Select.value;
+  const c2 = cat2Select.value;
 
-    filteredList = rawData.filter(r =>
-  (!sido || r["광역시도"] === sido) &&
-  (!gugun || r["시군구명"] === gugun) &&
-  (!cat1 || r["대분류"] === cat1) &&
-  (!cat2 || r["중분류"] === cat2)
-);
+  filteredList = rawData.filter(r =>
+    (!s || r["광역시도"] === s) &&
+    (!g || r["시군구명"] === g) &&
+    (!c1 || r["대분류"] === c1) &&
+    (!c2 || r["중분류"] === c2)
+  );
 
-    );
+  showList(filteredList);
 
-    if(filteredData.length > 0) {
-        document.getElementById('course-ui').style.display = 'block';
-        initMap(filteredData[0].위도, filteredData[0].경도);
-        renderList(filteredData);
-    } else {
-        alert("해당 조건의 장소가 없습니다.");
-    }
+  if (filteredList.length > 0) makeCourseBase(filteredList[0]);
 }
 
-// 3. 거리 계산 및 코스 생성 (20km)
-function getDist(lat1, lon1, lat2, lon2) {
-    const R = 6371;
-    const dLat = (lat2 - lat1) * Math.PI / 180;
-    const dLon = (lon2 - lon1) * Math.PI / 180;
-    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+/* 목록 출력 */
+function showList(list) {
+  const box = document.getElementById("info-list");
+  box.innerHTML = "";
+  list.forEach((p,i) => {
+    box.innerHTML += `
+      <div class="item">
+        <b>${i+1}. ${p["시설명"]}</b><br>
+        ${p["주소"]}
+      </div>
+    `;
+  });
 }
 
-function makeCourse() {
-    clearMap();
-    const start = filteredData[Math.floor(Math.random() * filteredData.length)];
-    const course = [start];
-    
-    const candidates = filteredData.filter(d => {
-        const dkm = getDist(start.위도, start.경도, d.위도, d.경도);
-        return dkm > 0 && dkm <= 20;
-    });
+/* 20km 코스 만들기 */
+function makeCourseBase(base) {
+  const bl = parseFloat(base["위도"]);
+  const bg = parseFloat(base["경도"]);
 
-    // 20km 이내 장소 중 랜덤하게 2곳 더 추가
-    const shuffled = candidates.sort(() => 0.5 - Math.random());
-    course.push(...shuffled.slice(0, 2));
+  const near = filteredList.filter(p => {
+    const d = getDistance(bl,bg,parseFloat(p["위도"]),parseFloat(p["경도"]));
+    p._dist = d;
+    return d <= 20;
+  }).sort((a,b)=>a._dist-b._dist);
 
-    renderMapMarkers(course);
-    renderList(course, true);
+  courseList = [
+    near.slice(0,3),
+    near.slice(3,6),
+    near.slice(6,9)
+  ];
+
+  document.getElementById("course-ui").style.display="block";
 }
 
-// 4. 정보 출력 (모든 배리어프리 항목 포함)
-function renderList(data, isCourse = false) {
-    const list = document.getElementById('info-list');
-    list.innerHTML = isCourse ? "<h2>🚩 추천 답사 코스</h2>" : `<h2>📍 검색 결과 (${data.length}곳)</h2>`;
-    
-    data.forEach((d, idx) => {
-        list.innerHTML += `
-            <div class="place-card">
-                <h3>${isCourse ? (idx+1)+'. ' : ''}${d.시설명} <small>${d.카테고리2}</small></h3>
-                <p>📍 ${d.도로명주소}</p>
-                <div class="accessibility-icons">
-                    <span class="badge">⏰ 운영: ${d.운영시간}</span>
-                    <span class="badge">🅿️ 무료주차: ${d['무료주차 가능여부']}</span>
-                    <span class="badge">💰 입장료: ${d['입장료 유무 여부']}</span>
-                    <span class="badge">🚪 전용출입문: ${d['장애인용 출입문']}</span>
-                    <span class="badge">♿ 휠체어대여: ${d['휠체어 대여 가능 여부']}</span>
-                    <span class="badge">🚻 장애인화장실: ${d['장애인 화장실 유무']}</span>
-                    <span class="badge">🅿️ 전용주차장: ${d['장애인 전용 주차장 여부']}</span>
-                    <span class="badge">🚛 대형주차: ${d['대형주차장 가능여부']}</span>
-                    <span class="badge">🦮 안내견동반: ${d['시각장애인 안내견 동반 가능 여부']}</span>
-                    <span class="badge">📖 점자가이드: ${d['점자 가이드 여부']}</span>
-                </div>
-            </div>`;
-    });
+/* 코스 보기 */
+function makeCourse(idx) {
+  const box = document.getElementById("course-result");
+  box.innerHTML = `<h3>추천 코스 ${["A","B","C"][idx]}</h3>`;
+  const list = courseList[idx];
+  if (!list || list.length===0) {
+    box.innerHTML += "해당 코스 없음";
+    return;
+  }
+  list.forEach((p,i)=>{
+    box.innerHTML += `
+      <div>
+        ${i+1}. ${p["시설명"]} (${p._dist.toFixed(1)}km)<br>
+        ${p["주소"]}
+      </div>
+    `;
+  });
 }
 
-function initMap(lat, lng) {
-    const container = document.getElementById('map');
-    map = new kakao.maps.Map(container, { center: new kakao.maps.LatLng(lat, lng), level: 5 });
-}
-
-function renderMapMarkers(course) {
-    const path = [];
-    course.forEach(d => {
-        const pos = new kakao.maps.LatLng(d.위도, d.경도);
-        path.push(pos);
-        new kakao.maps.Marker({ position: pos, map: map });
-    });
-    polyline = new kakao.maps.Polyline({ path: path, strokeColor: '#e67e22', strokeOpacity: 0.8, strokeWeight: 5, map: map });
-}
 
 function clearMap() { if(polyline) polyline.setMap(null); markers.forEach(m => m.setMap(null)); }
 const sidoList = [
@@ -170,117 +198,3 @@ const gugunData = {
   "제주특별자치도": ["제주시","서귀포시"]
 };
 
-// 시/도 채우기
-const sidoSelect = document.getElementById("sidoSelect");
-sidoList.forEach(sido => {
-  const opt = document.createElement("option");
-  opt.value = sido;
-  opt.textContent = sido;
-  sidoSelect.appendChild(opt);
-});
-
-// 시/군/구 갱신
-function updateGugun() {
-  const sido = document.getElementById("sidoSelect").value;
-  const gugunSelect = document.getElementById("gugunSelect");
-  gugunSelect.innerHTML = `<option value="">시/군/구 선택</option>`;
-  if (!gugunData[sido]) return;
-
-  gugunData[sido].forEach(gugun => {
-    const opt = document.createElement("option");
-    opt.value = gugun;
-    opt.textContent = gugun;
-    gugunSelect.appendChild(opt);
-  });
-}
-function getDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) *
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
-}
-let filteredList = [];
-let courseList = [];
-
-function searchPlaces() {
-  const sido = sidoSelect.value;
-  const gugun = gugunSelect.value;
-  const cat1 = cat1Select.value;
-  const cat2 = cat2Select.value;
-
-  filteredList = rawData.filter(r =>
-    (!sido || r["시도"] === sido) &&
-    (!gugun || r["시군구"] === gugun) &&
-    (!cat1 || r["대분류"] === cat1) &&
-    (!cat2 || r["중분류"] === cat2)
-  );
-
-  // 선택 조건에 맞는 게 위로 오도록
-  showList(filteredList);
-
-  // 기준 위치: 첫 번째 장소
-  if (filteredList.length > 0) {
-    makeCourseBase(filteredList[0]);
-  }
-}
-function showList(list) {
-  const box = document.getElementById("info-list");
-  box.innerHTML = "";
-
-  list.forEach((p, i) => {
-    box.innerHTML += `
-      <div class="item">
-        <strong>${i+1}. ${p["시설명"]}</strong><br>
-        ${p["주소"]}
-      </div>
-    `;
-  });
-}
-function makeCourseBase(base) {
-  const baseLat = parseFloat(base["위도"]);
-  const baseLng = parseFloat(base["경도"]);
-
-  const near = filteredList.filter(p => {
-    const d = getDistance(
-      baseLat, baseLng,
-      parseFloat(p["위도"]), parseFloat(p["경도"])
-    );
-    p._dist = d;
-    return d <= 20;
-  });
-
-  // 거리순 정렬
-  near.sort((a,b) => a._dist - b._dist);
-
-  // 3개 코스 만들기
-  courseList = [
-    near.slice(0, 3),
-    near.slice(3, 6),
-    near.slice(6, 9)
-  ];
-
-  document.getElementById("course-ui").style.display = "block";
-}
-function makeCourse(idx) {
-  const list = courseList[idx];
-  const box = document.getElementById("course-result");
-  box.innerHTML = `<h3>추천 코스 ${String.fromCharCode(65+idx)}</h3>`;
-
-  if (!list || list.length === 0) {
-    box.innerHTML += "해당 코스가 없습니다.";
-    return;
-  }
-
-  list.forEach((p,i) => {
-    box.innerHTML += `
-      <div>
-        ${i+1}. ${p["시설명"]} (${p._dist.toFixed(1)}km)<br>
-        ${p["주소"]}
-      </div>
-    `;
-  });
-}
