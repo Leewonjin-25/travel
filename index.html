@@ -31,6 +31,14 @@
             <p class="guide">지역과 카테고리를 선택한 후 조회하기를 눌러주세요.</p>
         </div>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js"></script><div id="course-ui" style="display:none; text-align:center; margin-bottom:10px;">
+    <strong>20km 이내 코스 추천: </strong>
+    <button onclick="makeCourse(0)" class="course-btn">추천 코스 A</button>
+    <button onclick="makeCourse(1)" class="course-btn">추천 코스 B</button>
+    <button onclick="makeCourse(2)" class="course-btn">추천 코스 C</button>
+</div>
+
+<div id="course-result"></div>
+
 </body>
 </html>
