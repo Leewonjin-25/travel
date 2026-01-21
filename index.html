@@ -2,14 +2,14 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>배리어프리 문화관광 지도</title>
+    <title>배리어프리 관광지 검색</title>
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=08c982bd1ad1cff1faa4d7f707db1665&libraries=services"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>배리어프리 문화예술관광 탐방</h1>
+        <h1>♿ 배리어프리 관광지 검색</h1>
         
         <div class="filter-group">
             <select id="sidoSelect" onchange="updateGugun()"><option value="">시/도 선택</option></select>
@@ -17,15 +17,10 @@
             <button onclick="searchPlaces()" class="search-btn">조회하기</button>
         </div>
 
-        <div id="course-ui" style="display:none; text-align:center; margin-bottom:20px; padding:15px; background:#fff8f3; border-radius:10px;">
-            <span id="range-info" style="font-weight:bold; margin-right:15px;"></span>
-            <button onclick="makeSmartCourse()" class="course-btn">랜덤 추천 코스 생성</button>
-        </div>
-
         <div id="map"></div>
         
         <div id="info-list">
-            <p style="text-align:center; color:#999; padding:50px 0;">지역을 선택한 후 조회하기 버튼을 눌러주세요.</p>
+            <p style="text-align:center; color:#999; padding:50px 0;">데이터를 불러오는 중입니다. 잠시만 기다려주세요...</p>
         </div>
     </div>
     <script src="script.js"></script>
