@@ -3,32 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>배리어프리 지능형 코스 추천</title>
+    <title>배리어프리 관광지 검색</title>
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=08c982bd1ad1cff1faa4d7f707db1665&libraries=services"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>♿ 스마트 배리어프리 탐방 코스</h1>
+        <h1>♿ 배리어프리 관광지 찾기</h1>
         
         <div class="filter-group">
-            <select id="sidoSelect" onchange="updateGugun()"><option value="">시/도 선택</option></select>
-            <select id="gugunSelect"><option value="">시/군/구 선택</option></select>
-            <select id="cat1Select"><option value="">대분류</option></select>
-            <select id="cat2Select"><option value="">중분류</option></select>
+            <select id="sidoSelect" onchange="updateGugun()">
+                <option value="">시/도 선택</option>
+            </select>
+            <select id="gugunSelect">
+                <option value="">시/군/구 선택</option>
+            </select>
             <button onclick="searchPlaces()" class="search-btn">조회하기</button>
         </div>
 
-        <div id="course-ui" style="display:none; text-align:center; margin-bottom:15px; background:#f8f9fa; padding:15px; border-radius:8px;">
-            <p id="range-info" style="margin-bottom:10px; font-weight:bold; color:#2c3e50;">검색 결과가 나오면 코스를 생성할 수 있습니다.</p>
-            <button onclick="makeSmartCourse()" class="course-btn" style="background-color:#e67e22; color:white; padding:10px 20px; border:none; border-radius:5px; cursor:pointer;">반경 자동 확장 코스 생성</button>
-        </div>
-
-        <div id="map" style="width:100%;height:450px;margin-bottom:20px;border-radius:10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+        <div id="map" style="width:100%;height:450px;margin-bottom:20px;border-radius:10px; background:#eee;"></div>
         
         <div id="info-list">
-            <p class="guide">지역과 카테고리를 선택한 후 조회하기를 눌러주세요.</p>
+            <p class="guide">데이터를 불러오는 중입니다...</p>
         </div>
     </div>
     <script src="script.js"></script>
