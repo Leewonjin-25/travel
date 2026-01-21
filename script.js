@@ -144,13 +144,42 @@ function renderMarkers(data, isCourse = false) {
 
 function renderList(data, isCourse = false) {
     const list = document.getElementById('info-list');
-    list.innerHTML = isCourse ? "<h2>🚩 추천 코스</h2>" : `<h2>📍 검색 결과 (${data.length}곳)</h2>`;
-    data.forEach((d, i) => {
+    
+    // 제목 설정
+    list.innerHTML = isCourse ? 
+        "<h2 style='color:#e67e22;'>🚩 추천 답사 코스</h2>" : 
+        `<h2 style='color:#2c3e50;'>📍 검색 결과 (${data.length}곳)</h2>`;
+    
+    if (data.length === 0) {
+        list.innerHTML += "<p>표시할 정보가 없습니다.</p>";
+        return;
+    }
+
+    data.forEach((d, idx) => {
+        // 데이터가 없을 경우를 대비한 기본값 처리
+        const name = d['시설명'] || '이름 없음';
+        const category = d['카테고리1'] || '분류 없음';
+        const address = d['도로명주소'] || d['지번주소'] || '주소 정보 없음';
+        const runtime = d['운영시간'] || '정보 없음';
+
         list.innerHTML += `
-            <div class="place-card" style="border:1px solid #ddd; padding:10px; margin-bottom:10px; border-radius:8px;">
-                <strong>${isCourse ? (i+1)+'. ' : ''}${d.시설명}</strong><br>
-                <small>${d.도로명주소 || d.지번주소}</small><br>
-                <small style="color:blue;">♿장애인 화장실: ${d['장애인 화장실 유무'] || '정보없음'}</small>
+            <div class="place-card" style="border:1px solid #eee; padding:15px; margin-bottom:15px; border-radius:12px; background:#fff; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <h3 style="margin:0 0 8px 0; color:#333;">
+                        ${isCourse ? (idx + 1) + '. ' : ''}${name}
+                    </h3>
+                    <span style="background:#e8f4fd; color:#007bff; padding:3px 8px; border-radius:5px; font-size:12px; font-weight:bold;">
+                        ${category}
+                    </span>
+                </div>
+                <p style="margin:5px 0; font-size:14px; color:#666;">📍 ${address}</p>
+                <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #eee; font-size:13px;">
+                    <span style="display:block; margin-bottom:4px;">⏰ <strong>운영시간:</strong> ${runtime}</span>
+                    <div style="display:flex; gap:10px; color:#555;">
+                        <span>♿ 출입문: ${d['장애인용 출입문'] === 'Y' ? '✅ 가능' : '❌ 불가'}</span>
+                        <span>🚻 화장실: ${d['장애인 화장실 유무'] === 'Y' ? '✅ 있음' : '❌ 없음'}</span>
+                    </div>
+                </div>
             </div>`;
     });
 }
