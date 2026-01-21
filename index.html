@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>배리어프리 문화관광 지도</title>
     <link rel="stylesheet" href="style.css">
     <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=08c982bd1ad1cff1faa4d7f707db1665&libraries=services"></script>
@@ -20,13 +21,12 @@
         </div>
 
         <div id="course-ui" style="display:none; text-align:center; margin-bottom:10px;">
-            <strong>20km 이내 코스 추천: </strong>
-            <button onclick="makeCourse('random')" class="course-btn">추천 코스 A</button>
-            <button onclick="makeCourse('random')" class="course-btn">추천 코스 B</button>
-            <button onclick="makeCourse('random')" class="course-btn">추천 코스 C</button>
+            <strong>📍 20km 이내 코스 추천: </strong>
+            <button onclick="makeCourse()" class="course-btn">랜덤 추천 코스 생성</button>
         </div>
 
-        <div id="map"></div>
+        <div id="map" style="width:100%;height:400px;margin-bottom:20px;border-radius:10px;"></div>
+        
         <div id="info-list">
             <p class="guide">지역과 카테고리를 선택한 후 조회하기를 눌러주세요.</p>
         </div>
